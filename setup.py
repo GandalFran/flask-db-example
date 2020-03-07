@@ -9,7 +9,7 @@ setup(
     author_email=AUTHOR_EMAIL,
     license=LICENSE,
     url="http://localhost:8080",
-    packages=['extraction'],
+    packages=['SQLUtils'],
     install_requires=[
         'Flask==1.1.1',
         'werkzeug==0.16.1',
