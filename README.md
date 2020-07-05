@@ -1,4 +1,4 @@
-# celery-sql-example
+# flask-sql-example
 
 ### How to deploy
 
