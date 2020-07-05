@@ -1,22 +1,23 @@
+from datetime import datetime
 from flask import Flask
 from flask_cors import CORS
 from flask_restplus import Api, Resource, reqparse
 from werkzeug.exceptions import BadRequest, NotFound
 
 from config import APP_NAME
-from SQLUtils.SQLUtils import SQL
+from MongoDBUtils.MongoDBUtils import MongoDB
 
 # flask configuration
 app = Flask(APP_NAME)
 app.config.from_object('config')
 api = Api(app, version=app.config['VERSION'], title=app.config['TITLE'], description=app.config['DESCRIPTION'])
-sql_service = api.namespace('v1', description=app.config['DESCRIPTION'])
+mongodb_service = api.namespace('v1', description=app.config['DESCRIPTION'])
 
 # flask anti CORS policy configuration
 CORS(app)
 
 # instance my SQLUtils wrapper
-sql_db = SQL(app.config['SQL_HOST'], app.config['SQL_DB'], app.config['SQL_USER'], app.config['SQL_PASSWORD'])
+mongoDB = MongoDB(app.config['MONGO_URI'], app.config['MONGO_DB'])
 
 
 # error handling
@@ -35,7 +36,7 @@ def default_error_handler(error):
     return {"message": str(error)}, 500
 
 
-@sql_service.route("/")
+@mongodb_service.route("/")
 class CheckStatus(Resource):
     """check status"""
 
@@ -44,26 +45,25 @@ class CheckStatus(Resource):
 
 
 # define endpoint args parser
-sql_insert_args_parser = reqparse.RequestParser()
-sql_insert_args_parser.add_argument('data', required=True, type=str, location='form', help='missing data parameter')
-sql_insert_args_parser.add_argument('origin', required=True, type=str, location='form', help='missing origin parameter')
-sql_insert_args_parser.add_argument('data_type', required=True, type=str, location='form', help='missing data_type parameter')
+argument_parser = reqparse.RequestParser()
+argument_parser.add_argument('data', required=True, type=str, location='json', help='missing data parameter')
+argument_parser.add_argument('sensor', required=True, type=str, location='json', help='missing sensor parameter')
 
 
-@sql_service.route("/insert")
-@sql_service.doc(
-    params={'data': 'A json with data to insert', 'data_type': 'str with data type', 'origin': 'str with sensor id'})
+@mongodb_service.route("/insert")
+@mongodb_service.doc(
+    params={'data': 'A json with data to insert', 'sensor': 'The sensor ID'})
 class SQLInsert(Resource):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.parser = sql_insert_args_parser
+        self.parser = argument_parser
 
-    @api.expect(sql_insert_args_parser)
+    @api.expect(argument_parser)
     def post(self):
         """insert data in db"""
-        data, data_type, origin = self._get_args()
-        status = self._insert_db(data, data_type, origin)
+        data, sensor = self._get_args()
+        status = self._insert_db(sensor, data)
         return {
             "status": status
         }
@@ -71,11 +71,15 @@ class SQLInsert(Resource):
     def _get_args(self):
         args = self.parser.parse_args()
         data = args['data']
-        origin = args['origin']
-        data_type = args['data_type']
-        return data, data_type, origin
+        sensor = args['sensor']
+        return data, sensor
 
     @classmethod
-    def _insert_db(cls, data, data_type, origin):
-        sql_db.insert(data, data_type, origin)
+    def _insert_db(cls, sensor, data):
+        document = {
+            "timestamp": datetime.today(),
+            "sensor": sensor,
+            "sample": data
+        }
+        mongoDB.insert(app.config['MONGO_COLLECTION'], document)
         return "OK"
