@@ -1,6 +1,6 @@
-# flask-sql-example
+# flask-db-example
 
-Template for Python3 and SQL or MongoDB tempalte
+Template for Python3 Flask and SQL or MongoDB projects.
 
 ### How to deploy
 
