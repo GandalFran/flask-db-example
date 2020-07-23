@@ -1,5 +1,7 @@
 # flask-sql-example
 
+Template for Python3 and SQL or MongoDB tempalte
+
 ### How to deploy
 
 1. Install mariadb with `apt install mariadb-client mariadb-server -y`
