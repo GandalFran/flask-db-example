@@ -15,6 +15,6 @@ setup(
         'werkzeug==0.16.1',
         'flask_cors==3.0.8',
         'flask_restplus==0.13.0',
-        'mysql-connector-python==8.0.11', 'mysql'
+        'mysql-connector-python==8.0.14', 'mysql'
     ]
 )
